@@ -38,19 +38,20 @@ button {
   margin: 0 auto;
   padding: 20px;
   background: var(--paper);
+  transition: background-color 700ms ease, color 700ms ease;
 }
 
 .app-shell.theme-night {
-  --paper: #162e35;
+  --paper: #142b33;
   --ink: #f5efdf;
-  --muted: #b7c8c2;
-  --card: rgba(24, 47, 54, 0.94);
+  --muted: #afc5be;
+  --card: rgba(22, 45, 52, 0.94);
   --line: rgba(245, 239, 223, 0.12);
-  --accent: #f0a06d;
+  --accent: #f2a36d;
 }
 
 .app-shell.theme-sunset {
-  --paper: #f8e8d5;
+  --paper: #f7e6d0;
   --ink: #49362f;
   --muted: #876d61;
   --card: rgba(255, 246, 232, 0.95);
@@ -156,28 +157,18 @@ h2 {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 28px;
-  background: linear-gradient(
-    180deg,
-    rgba(164, 211, 197, 0.52),
-    rgba(226, 238, 213, 0.72)
-  );
-  box-shadow: 0 14px 40px rgba(25, 68, 60, 0.08);
-}
-
-.theme-night .map-card {
-  background: linear-gradient(
-    180deg,
-    rgba(29, 59, 68, 0.95),
-    rgba(34, 70, 73, 0.94)
-  );
+  background: linear-gradient(180deg, #afd7c9 0%, #dbeacb 55%, #cddcaf 100%);
+  box-shadow: 0 16px 42px rgba(25, 68, 60, 0.09);
+  transition: background 700ms ease, box-shadow 700ms ease;
 }
 
 .theme-sunset .map-card {
-  background: linear-gradient(
-    180deg,
-    rgba(244, 203, 168, 0.78),
-    rgba(224, 222, 190, 0.84)
-  );
+  background: linear-gradient(180deg, #e9a67c 0%, #f2c39f 46%, #d6d9b1 100%);
+}
+
+.theme-night .map-card {
+  background: linear-gradient(180deg, #1d4a58 0%, #22494f 55%, #263d3c 100%);
+  box-shadow: 0 18px 46px rgba(5, 27, 34, 0.26);
 }
 
 .map-svg {
@@ -191,7 +182,7 @@ h2 {
   position: absolute;
   top: 21px;
   left: 28px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.78);
   font-size: 11px;
   letter-spacing: 0.22em;
 }
@@ -200,34 +191,132 @@ h2 {
   position: absolute;
   top: 20px;
   right: 25px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.78);
   font-size: 11px;
 }
 
+.map-decor {
+  pointer-events: none;
+}
+
+.mountain-back {
+  fill: none;
+  stroke: rgba(73, 102, 78, 0.34);
+  stroke-width: 20;
+  stroke-linecap: round;
+}
+
+.mountain-front {
+  fill: none;
+  stroke: rgba(80, 113, 77, 0.48);
+  stroke-width: 32;
+  stroke-linecap: round;
+}
+
+.rice-field {
+  fill: none;
+  stroke: rgba(126, 145, 77, 0.8);
+  stroke-width: 10;
+}
+
+.temple {
+  fill: #926f55;
+  opacity: 0.7;
+}
+
+.palm {
+  fill: none;
+  stroke: #57795f;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.palm-two {
+  stroke-width: 4;
+}
+
+.sun-or-moon {
+  fill: rgba(255, 246, 190, 0.92);
+  filter: drop-shadow(0 0 18px rgba(255, 242, 181, 0.42));
+}
+
+.map-stars {
+  opacity: 0;
+  fill: #fff8ce;
+  transition: opacity 700ms ease;
+}
+
+.theme-night .map-stars {
+  opacity: 1;
+}
+
+.theme-night .sun-or-moon {
+  fill: #f4f0cf;
+  filter: drop-shadow(0 0 10px rgba(244, 240, 207, 0.25));
+}
+
+.theme-night .mountain-back,
+.theme-night .mountain-front {
+  stroke: rgba(135, 167, 151, 0.25);
+}
+
+.theme-night .rice-field {
+  stroke: rgba(95, 123, 103, 0.6);
+}
+
+.theme-night .temple {
+  fill: #b68a63;
+  opacity: 0.55;
+}
+
+.theme-night .palm {
+  stroke: #79a08b;
+}
+
+.ocean-shape {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 20;
+  stroke-linecap: round;
+}
+
+.theme-night .ocean-shape {
+  stroke: rgba(178, 218, 216, 0.12);
+}
+
 .island-main {
-  fill: #a9b979;
-  stroke: #6b835b;
+  fill: #a8b979;
+  stroke: #657d59;
   stroke-width: 4;
 }
 
 .island-small {
-  fill: #9eaf70;
-  stroke: #6b835b;
+  fill: #9cae6f;
+  stroke: #657d59;
   stroke-width: 3;
 }
 
 .theme-night .island-main,
 .theme-night .island-small {
-  fill: #3f655d;
-  stroke: #7d9b82;
+  fill: #405f59;
+  stroke: #729186;
 }
 
 .route-line {
   fill: none;
   stroke: var(--accent);
-  stroke-width: 8;
+  stroke-width: 7;
   stroke-linecap: round;
-  stroke-dasharray: 14 13;
+  stroke-dasharray: 5 16;
+}
+
+.background-route {
+  opacity: 0.28;
+}
+
+.active-route {
+  stroke-dasharray: 9 14;
+  filter: drop-shadow(0 0 5px rgba(226, 118, 75, 0.15));
 }
 
 .destination-group {
@@ -238,12 +327,14 @@ h2 {
   fill: transparent;
   stroke: var(--accent);
   stroke-width: 3;
-  opacity: 0.65;
+  opacity: 0.55;
+  transition: r 250ms ease, opacity 250ms ease, stroke-width 250ms ease;
 }
 
 .destination-group.active .destination-ring {
-  fill: rgba(226, 118, 75, 0.14);
+  fill: rgba(255, 255, 255, 0.14);
   stroke-width: 5;
+  opacity: 0.9;
 }
 
 .destination-dot {
@@ -256,23 +347,58 @@ h2 {
   fill: var(--ink);
   font-size: 20px;
   font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.58);
+  stroke-width: 7px;
+  stroke-linejoin: round;
+}
+
+.theme-night .destination-label {
+  stroke: rgba(20, 43, 51, 0.58);
+}
+
+.karo-marker {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: float 2.4s ease-in-out infinite;
+}
+
+.karo-marker.is-traveling {
+  animation: travelBob 1s ease-in-out infinite;
 }
 
 .avatar-halo {
-  fill: rgba(255, 255, 255, 0.68);
+  fill: rgba(255, 255, 255, 0.78);
   stroke: var(--accent);
   stroke-width: 3;
 }
 
 .avatar-head {
-  fill: #e8b595;
-  stroke: #7b5646;
+  fill: #e7b391;
+  stroke: #6f5144;
   stroke-width: 2;
+}
+
+.avatar-hair {
+  fill: #593e34;
 }
 
 .avatar-body {
   fill: var(--accent);
-  stroke: #7a5544;
+  stroke: #704d40;
+  stroke-width: 2;
+}
+
+.avatar-leg {
+  fill: none;
+  stroke: #6f4f44;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.avatar-bag {
+  fill: #7c6042;
+  stroke: #5f4935;
   stroke-width: 2;
 }
 
@@ -280,10 +406,37 @@ h2 {
   fill: var(--ink);
   font-size: 20px;
   font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 7px;
+  stroke-linejoin: round;
 }
 
-.karo-marker {
-  animation: float 2.4s ease-in-out infinite;
+.transport-label {
+  fill: var(--ink);
+  font-size: 24px;
+}
+
+.map-compass circle {
+  fill: rgba(255, 255, 255, 0.38);
+  stroke: rgba(255, 255, 255, 0.65);
+  stroke-width: 1.5;
+}
+
+.map-compass text,
+.map-compass path {
+  fill: var(--ink);
+}
+
+.map-compass text {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.map-caption {
+  fill: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
 }
 
 @keyframes float {
@@ -293,7 +446,18 @@ h2 {
   }
 
   50% {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes travelBob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translateY(-5px) rotate(1deg);
   }
 }
 
@@ -313,6 +477,7 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 22px;
   background: var(--card);
+  box-shadow: 0 8px 24px rgba(25, 68, 60, 0.04);
 }
 
 .now-card,
@@ -487,6 +652,10 @@ h2 {
     padding: 12px;
   }
 
+  .topbar {
+    padding-bottom: 16px;
+  }
+
   .hero-bar {
     align-items: start;
   }
@@ -507,7 +676,9 @@ h2 {
   .map-note {
     top: 20px;
     right: 16px;
+    max-width: 48%;
     font-size: 9px;
+    text-align: right;
   }
 
   .destination-label {
@@ -544,7 +715,8 @@ h2 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .karo-marker {
+  .karo-marker,
+  .karo-marker.is-traveling {
     animation: none;
   }
 }
