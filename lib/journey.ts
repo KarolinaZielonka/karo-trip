@@ -15,6 +15,14 @@ export type JourneyState = {
   progress?: number;
 };
 
+function getNextItem(now: Date) {
+  return itinerary
+    .filter((item) => new Date(item.startAt) > now)
+    .sort(
+      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
+    )[0];
+}
+
 export function getJourneyState(now: Date): JourneyState {
   const travel = travelSegments.find(
     (segment) =>
@@ -22,45 +30,34 @@ export function getJourneyState(now: Date): JourneyState {
   );
 
   if (travel) {
-    const total =
-      new Date(travel.endAt).getTime() - new Date(travel.startAt).getTime();
-    const elapsed = now.getTime() - new Date(travel.startAt).getTime();
+    const start = new Date(travel.startAt).getTime();
+    const end = new Date(travel.endAt).getTime();
+    const progress = (now.getTime() - start) / (end - start);
 
     return {
       status: "traveling",
-      destinationId: travel.from,
+      destinationId: travel.to,
       activeTravel: travel,
-      progress: Math.min(1, Math.max(0, elapsed / total)),
-      nextItem: itinerary
-        .filter((item) => new Date(item.startAt) > now)
-        .sort(
-          (a, b) =>
-            new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
-        )[0],
+      progress: Math.min(1, Math.max(0, progress)),
+      nextItem: getNextItem(now),
     };
   }
 
   const active = itinerary
-    .filter(
-      (item) =>
-        now.getTime() >= new Date(item.startAt).getTime() &&
-        now.getTime() <
-          (item.endAt
-            ? new Date(item.endAt).getTime()
-            : new Date(item.startAt).getTime() + 3_600_000),
-    )
+    .filter((item) => {
+      const start = new Date(item.startAt).getTime();
+      const end = item.endAt
+        ? new Date(item.endAt).getTime()
+        : start + 3_600_000;
+
+      return now.getTime() >= start && now.getTime() < end;
+    })
     .sort(
-      (a, b) =>
-        new Date(b.startAt).getTime() - new Date(a.startAt).getTime(),
+      (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime(),
     );
 
   const current = active[0];
-  const next = itinerary
-    .filter((item) => new Date(item.startAt).getTime() > now.getTime())
-    .sort(
-      (a, b) =>
-        new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
-    )[0];
+  const next = getNextItem(now);
 
   if (current) {
     return {
@@ -117,7 +114,7 @@ export function getDayPart(date: Date, timeZone: string) {
   const hour = getLocalTimeParts(date, timeZone).hour;
 
   if (hour < 6) return "night" as const;
-  if (hour < 7.5) return "dawn" as const;
+  if (hour < 7) return "dawn" as const;
   if (hour < 17.5) return "day" as const;
   if (hour < 19) return "sunset" as const;
 
