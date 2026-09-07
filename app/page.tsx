@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   getDayPart,
+  getInterpolatedPosition,
   getJourneyState,
   getLocalTimeParts,
 } from "../lib/journey";
@@ -18,11 +19,11 @@ import {
 
 const DEMO_TIME = "2026-09-13T20:15";
 
-const points: Record<DestinationId, [number, number]> = {
-  ubud: [470, 235],
-  "nusa-lembongan": [690, 395],
-  "gili-trawangan": [865, 280],
-  uluwatu: [355, 320],
+const mapPoints: Record<DestinationId, [number, number]> = {
+  uluwatu: [230, 425],
+  ubud: [500, 235],
+  "nusa-lembongan": [690, 350],
+  "gili-trawangan": [865, 255],
 };
 
 function toDate(value: string) {
@@ -38,13 +39,26 @@ function formatTime(iso: string) {
   }).format(new Date(iso));
 }
 
-function formatTripDate(date: Date) {
-  return new Intl.DateTimeFormat("pl-PL", {
+function formatTripDate(date: Date, language: "pl" | "en") {
+  return new Intl.DateTimeFormat(language === "pl" ? "pl-PL" : "en-GB", {
     timeZone: tripTimezone,
     weekday: "long",
     day: "numeric",
     month: "long",
   }).format(date);
+}
+
+function lerpMapPoint(state: ReturnType<typeof getJourneyState>) {
+  if (!state.activeTravel) return;
+
+  const from = mapPoints[state.activeTravel.from];
+  const to = mapPoints[state.activeTravel.to];
+  const progress = state.progress ?? 0;
+
+  return {
+    x: from[0] + (to[0] - from[0]) * progress,
+    y: from[1] + (to[1] - from[1]) * progress,
+  };
 }
 
 export default function Home() {
@@ -68,6 +82,11 @@ export default function Home() {
   const current = destinationById[currentId];
   const baliTime = getLocalTimeParts(now, tripTimezone).label;
   const warsawTime = getLocalTimeParts(now, referenceTimezone).label;
+  const movingPosition = lerpMapPoint(journey);
+  const currentMapPoint = movingPosition ?? {
+    x: mapPoints[currentId][0],
+    y: mapPoints[currentId][1],
+  };
 
   const copy =
     lang === "pl"
@@ -83,13 +102,14 @@ export default function Home() {
           traveling: "Karo jest w drodze",
           before: "Podróż jeszcze się nie zaczęła",
           after: "Podróż zakończona",
-          tripPlan: "11–26 września",
           places: "4 miejsca",
           weather: "Pogoda",
           partialCloud: "Częściowe zachmurzenie",
           freeTime: "Czas wolny",
           travel: "Podróż",
           mapNote: "Schematyczna mapa · lokalizacje orientacyjne",
+          route: "Trasa Karo",
+          nextStop: "Następny przystanek",
         }
       : {
           planned: "Following the planned journey",
@@ -103,13 +123,14 @@ export default function Home() {
           traveling: "Karo is travelling",
           before: "The trip has not started yet",
           after: "Trip completed",
-          tripPlan: "11–26 September",
           places: "4 places",
           weather: "Weather",
           partialCloud: "Partly cloudy",
           freeTime: "Free time",
           travel: "Travel",
           mapNote: "Schematic map · approximate locations",
+          route: "Karo's route",
+          nextStop: "Next stop",
         };
 
   const title =
@@ -120,6 +141,9 @@ export default function Home() {
         : journey.status === "after"
           ? copy.after
           : `${lang === "pl" ? "Karo jest w" : "Karo is in"} ${current.name}`;
+
+  const transportIcon =
+    journey.activeTravel?.type === "ferry" ? "⛴" : "🚐";
 
   return (
     <main className={`app-shell theme-${dayPart}`}>
@@ -142,7 +166,7 @@ export default function Home() {
 
       <section className="hero-bar">
         <div>
-          <div className="eyebrow">{formatTripDate(now)}</div>
+          <div className="eyebrow">{formatTripDate(now, lang)}</div>
           <h1>{title}</h1>
           <p>{copy.planned}</p>
         </div>
@@ -168,25 +192,49 @@ export default function Home() {
           role="img"
           aria-label="Schematyczna mapa podróży Karo"
         >
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgba(178, 222, 211, 0.8)" />
+              <stop offset="100%" stopColor="rgba(238, 242, 215, 0.2)" />
+            </linearGradient>
+            <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="8" stdDeviation="8" floodOpacity="0.12" />
+            </filter>
+          </defs>
+
+          <rect x="0" y="0" width="1000" height="640" rx="22" fill="url(#sky)" />
+
+          <g className="map-decor" aria-hidden="true">
+            <path className="mountain-back" d="M70 280 Q150 170 235 280 T400 280" />
+            <path className="mountain-front" d="M55 340 Q135 225 225 340 T395 345" />
+            <path className="rice-field rice-one" d="M260 210 Q335 175 405 208 Q370 248 300 248 Q278 235 260 210 Z" />
+            <path className="rice-field rice-two" d="M275 255 Q360 220 435 255 Q395 295 315 290 Q288 278 275 255 Z" />
+            <path className="temple" d="M650 165 L670 130 L690 165 L678 165 L678 195 L662 195 L662 165 Z" />
+            <path className="temple" d="M735 410 L755 372 L775 410 L764 410 L764 438 L746 438 L746 410 Z" />
+            <path className="palm palm-one" d="M560 90 Q560 165 550 215 M560 120 Q530 95 505 105 M558 122 Q586 94 620 104 M558 140 Q528 128 502 143 M560 140 Q593 123 624 141" />
+            <path className="palm palm-two" d="M825 470 Q828 420 832 390 M831 425 Q808 405 790 415 M832 425 Q853 402 876 412" />
+            <circle className="sun-or-moon" cx="860" cy="90" r="34" />
+            <g className="map-stars">
+              <circle cx="780" cy="82" r="2" />
+              <circle cx="815" cy="118" r="1.8" />
+              <circle cx="915" cy="140" r="2" />
+              <circle cx="720" cy="100" r="1.5" />
+            </g>
+          </g>
+
+          <path className="ocean-shape" d="M95 420 Q180 380 260 430 T430 430 T610 430 T790 430 T930 420" />
+
           <path
-            className="island-main"
-            d="M170 255 C250 190 340 185 440 210 C485 220 545 215 595 185 C635 160 705 165 742 205 C766 232 760 270 725 284 C675 304 629 290 582 310 C520 337 450 350 385 333 C322 317 261 334 205 319 C168 309 148 284 170 255 Z"
+            className="route-line background-route"
+            d="M230 425 C315 345 418 285 500 235 C570 245 620 300 690 350 C755 330 805 285 865 255"
           />
           <path
-            className="island-small"
-            d="M690 378 C730 350 791 354 823 382 C846 403 833 428 800 438 C760 450 714 439 694 419 C681 405 678 390 690 378 Z"
-          />
-          <path
-            className="island-small"
-            d="M835 260 C865 244 910 251 930 270 C944 284 936 300 912 307 C884 315 851 305 838 292 C828 281 826 269 835 260 Z"
-          />
-          <path
-            className="route-line"
-            d="M355 320 C450 235 690 395 865 280"
+            className="route-line active-route"
+            d="M230 425 C315 345 418 285 500 235 C570 245 620 300 690 350 C755 330 805 285 865 255"
           />
 
           {destinations.map((destination) => {
-            const [x, y] = points[destination.id];
+            const [x, y] = mapPoints[destination.id];
             const isCurrent = destination.id === currentId;
 
             return (
@@ -194,20 +242,22 @@ export default function Home() {
                 key={destination.id}
                 className={`destination-group ${isCurrent ? "active" : ""}`}
                 onClick={() => setSelected(destination.id)}
+                role="button"
+                aria-label={destination.name}
               >
                 <circle
                   cx={x}
                   cy={y}
-                  r={isCurrent ? 25 : 17}
+                  r={isCurrent ? 28 : 18}
                   className="destination-ring"
                 />
                 <circle
                   cx={x}
                   cy={y}
-                  r="7"
+                  r="8"
                   className="destination-dot"
                 />
-                <text x={x + 18} y={y - 11} className="destination-label">
+                <text x={x + 20} y={y - 15} className="destination-label">
                   {destination.name}
                 </text>
               </g>
@@ -215,19 +265,43 @@ export default function Home() {
           })}
 
           <g
-            className="karo-marker"
-            transform={`translate(${points[currentId][0]},${points[currentId][1]})`}
+            className={`karo-marker ${journey.status === "traveling" ? "is-traveling" : ""}`}
+            transform={`translate(${currentMapPoint.x},${currentMapPoint.y})`}
+            filter="url(#softShadow)"
           >
-            <circle cx="0" cy="-24" r="18" className="avatar-halo" />
-            <circle cx="0" cy="-24" r="10" className="avatar-head" />
+            {journey.status === "traveling" ? (
+              <text x="0" y="-48" textAnchor="middle" className="transport-label">
+                {transportIcon}
+              </text>
+            ) : null}
+
+            <circle cx="0" cy="-24" r="19" className="avatar-halo" />
+            <circle cx="0" cy="-24" r="11" className="avatar-head" />
+            <path
+              className="avatar-hair"
+              d="M-11 -25 Q-9 -39 0 -39 Q10 -39 12 -25 Q6 -31 0 -28 Q-6 -31 -11 -25 Z"
+            />
             <path
               className="avatar-body"
-              d="M-13 2 Q0 -12 13 2 L10 24 L-10 24 Z"
+              d="M-14 2 Q0 -12 14 2 L10 26 L-10 26 Z"
             />
-            <text x="18" y="-22" className="avatar-name">
+            <path className="avatar-leg left" d="M-5 24 L-9 36" />
+            <path className="avatar-leg right" d="M5 24 L9 36" />
+            <circle className="avatar-bag" cx="14" cy="5" r="5" />
+            <text x="22" y="-20" className="avatar-name">
               Karo
             </text>
           </g>
+
+          <g className="map-compass" aria-hidden="true">
+            <circle cx="920" cy="540" r="28" />
+            <text x="920" y="531" textAnchor="middle">N</text>
+            <path d="M920 515 L915 535 L925 535 Z" />
+          </g>
+
+          <text x="60" y="570" className="map-caption">
+            {journey.status === "traveling" ? copy.route : `${copy.nextStop}: ${journey.nextItem ? destinationById[journey.nextItem.destinationId].name : "—"}`}
+          </text>
         </svg>
       </section>
 
@@ -243,7 +317,7 @@ export default function Home() {
               {journey.currentItem?.type === "meal"
                 ? "🍜"
                 : journey.status === "traveling"
-                  ? "🚤"
+                  ? transportIcon
                   : "🌿"}
             </span>
             <div>
@@ -288,7 +362,7 @@ export default function Home() {
         <div className="section-heading">
           <div>
             <div className="card-kicker">{copy.schedule}</div>
-            <h2>{copy.tripPlan}</h2>
+            <h2>{lang === "pl" ? "11–26 września" : "11–26 September"}</h2>
           </div>
           <div className="journey-progress">{copy.places}</div>
         </div>
@@ -307,7 +381,7 @@ export default function Home() {
                   {itinerary.find(
                     (item) => item.destinationId === destination.id,
                   )?.startAt.slice(8, 10) ?? ""}{" "}
-                  wrz
+                  {lang === "pl" ? "wrz" : "Sep"}
                 </small>
               </span>
             </button>
