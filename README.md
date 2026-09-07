@@ -13,7 +13,3 @@ The first milestone focuses on one thing: **where is Karo right now, according t
 - local Bali time + Warsaw reference time
 - day / sunset / night visual state
 - preview time control for testing
-
-## Development
-
-The initial implementation is intentionally dependency-light so the core journey logic can be reviewed before adding map/weather infrastructure.
